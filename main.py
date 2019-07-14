@@ -52,6 +52,8 @@ def updatedisplay(reloadit=False):
         if unsetNext and nextEvent:
             nextEvent = None
             reloadit = True
+        if (nextEvent or currentEvent) and len(calendar) == 0:
+            reloadit = True
         HBlackimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
         HRedimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
         drawblack = ImageDraw.Draw(HBlackimage)
@@ -91,6 +93,7 @@ def updatedisplay(reloadit=False):
                 drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
             else:
                 if minutestillevent <= 15:
+                    reloadit = True
                     drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin in', font = fontTiny)
                     drawred.text((8, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent) + ' Minuten', font = fontTiny)
                     drawred.text((9, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent), font = fontTiny)
@@ -108,5 +111,5 @@ def updatedisplay(reloadit=False):
 
 updatedisplay(True)
 while True:
-    time.sleep(60*5)
+    time.sleep(60)
     updatedisplay()

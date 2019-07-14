@@ -13,13 +13,12 @@ currentEvent = None
 nextEvent = None
 calendarCache = []
 
-def updatedisplay():
+def updatedisplay(reloadit=False):
     try:
         global currentEvent, nextEvent, calendarCache
         path = os.path.dirname(os.path.abspath(__file__))
         epd = epd2in13b.EPD()
         epd.init()
-        reloadit = False
         unsetNext = True
         try:
             calendar=events('https://calendar.google.com/calendar/ical/infanf.de_18850kqvp196qji0m012dma9sq0d06gb6grjidpk64p30e9g60%40resource.calendar.google.com/private-149262aac9424e3447b3e3101f8a6fc9/basic.ics')
@@ -50,7 +49,7 @@ def updatedisplay():
                 unsetNext = False
                 break
             index=index+1
-        if unsetNext:
+        if unsetNext and nextEvent:
             nextEvent = None
             reloadit = True
         HBlackimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
@@ -107,6 +106,7 @@ def updatedisplay():
         print('traceback.format_exc():\n%s',traceback.format_exc())
         exit()
 
+updatedisplay(True)
 while True:
+    time.sleep(60*5)
     updatedisplay()
-    time.sleep(30)

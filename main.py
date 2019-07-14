@@ -7,6 +7,7 @@ from PIL import Image,ImageDraw,ImageFont
 from datetime import datetime, timedelta, timezone
 from icalevents.icalevents import events
 import traceback
+import os
 
 currentEvent = None
 nextEvent = None
@@ -15,6 +16,7 @@ calendarCache = []
 def updatedisplay():
     try:
         global currentEvent, nextEvent, calendarCache
+        path = os.path.dirname(os.path.abspath(__file__))
         epd = epd2in13b.EPD()
         epd.init()
         reloadit = False
@@ -50,24 +52,25 @@ def updatedisplay():
             index=index+1
         if unsetNext:
             nextEvent = None
+            reloadit = True
         HBlackimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
         HRedimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
         drawblack = ImageDraw.Draw(HBlackimage)
         drawred = ImageDraw.Draw(HRedimage)
-        fontTiny = ImageFont.truetype('./ProggyTiny.ttf', 16)
-        fontSmall = ImageFont.truetype('./ProggyClean.ttf', 16)
-        fontBig = ImageFont.truetype('./Roboto-Regular.ttf', 32)
-        fontHuge = ImageFont.truetype('./Roboto-Regular.ttf', 44)
-        meetingimage = Image.open('meeting.bmp')
+        fontTiny = ImageFont.truetype(path+'/ProggyTiny.ttf', 16)
+        fontSmall = ImageFont.truetype(path+'/ProggyClean.ttf', 16)
+        fontBig = ImageFont.truetype(path+'/Roboto-Regular.ttf', 32)
+        fontHuge = ImageFont.truetype(path+'/Roboto-Regular.ttf', 44)
+        meetingimage = Image.open(path+'/meeting.bmp')
         if currentEvent:
             drawred.rectangle((1, 1, epd2in13b.EPD_HEIGHT - 2, epd2in13b.EPD_WIDTH - 41), fill = 0)
             x=20
             y=4
             drawred.text((x+48, y-2), 'BELEGT', font = fontBig, fill=1)
             drawred.bitmap(bitmap=meetingimage, xy=(x,y), fill=1)
-            circimage = Image.open('circ14.bmp')
+            circimage = Image.open(path+'/circ14.bmp')
             drawred.bitmap(bitmap=circimage, xy=(x+10,y+0), fill=1)
-            wrongwayimage = Image.open('wrongway.bmp')
+            wrongwayimage = Image.open(path+'/wrongway.bmp')
             drawblack.bitmap(bitmap=wrongwayimage, xy=(x+11,y+1))
             timetillend = (currentEvent.end - datetime.now(timezone.utc)).seconds // 60
             drawred.text((8, epd2in13b.EPD_WIDTH-63), 'Noch bis ' + currentEvent.end.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny, fill=1)
@@ -76,7 +79,7 @@ def updatedisplay():
             x=30
             y=14
             drawblack.bitmap(bitmap=meetingimage, xy=(x,y), fill=0)
-            checkimage = Image.open('check.bmp')
+            checkimage = Image.open(path+'/check.bmp')
             drawblack.bitmap(bitmap=checkimage, xy=(x+10,y+3), fill=0)
             drawblack.text((x+54, y-7), 'FREI', font = fontHuge, fill=0)
         drawblack.rectangle((0, 0, epd2in13b.EPD_HEIGHT - 1, epd2in13b.EPD_WIDTH - 40), outline = 0)

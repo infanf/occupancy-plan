@@ -185,6 +185,20 @@ class EPD:
         
         self.send_command(DISPLAY_REFRESH) 
         self.wait_until_idle()
+
+    def partialdisplay(self, imageblack, imagered, x1, x2, y1, y2):
+        self.send_command(DATA_START_TRANSMISSION_1)
+        for i in range(0, self.width * self.height // 8):
+            self.send_data(imageblack[i])
+        self.send_command(DATA_STOP)
+        
+        self.send_command(DATA_START_TRANSMISSION_2)
+        for i in range(0, self.width * self.height // 8):
+            self.send_data(imagered[i])
+        self.send_command(DATA_STOP)
+        
+        self.send_command(DISPLAY_REFRESH) 
+        self.wait_until_idle()
         
     def Clear(self):
         self.send_command(DATA_START_TRANSMISSION_1)

@@ -4,39 +4,106 @@
 import epd2in13b
 import time
 from PIL import Image,ImageDraw,ImageFont
+from datetime import datetime, timedelta, timezone
+from icalevents.icalevents import events
 import traceback
 
-try:
-    epd = epd2in13b.EPD()
-    epd.init()
-    print("Clear...")
+currentEvent = None
+nextEvent = None
+calendarCache = []
 
-    print("Drawing")
+def updatedisplay():
+    try:
+        global currentEvent, nextEvent, calendarCache
+        epd = epd2in13b.EPD()
+        epd.init()
+        reloadit = False
+        unsetNext = True
+        try:
+            calendar=events('https://calendar.google.com/calendar/ical/infanf.de_18850kqvp196qji0m012dma9sq0d06gb6grjidpk64p30e9g60%40resource.calendar.google.com/private-149262aac9424e3447b3e3101f8a6fc9/basic.ics')
+            calendarCache=calendar
+        except:
+            calendar=calendarCache
+        index = 0
+        calendar.sort(key=lambda x: x.start)
+        for event in calendar:
+            if index == 0:
+                if event.start < datetime.now(timezone.utc):
+                    if currentEvent == None or event.uid != currentEvent.uid:
+                        reloadit = True
+                    currentEvent = event
+                else:
+                    if currentEvent:
+                        currentEvent = None
+                        reloadit = True
+                    unsetNext = False
+                    if nextEvent == None or event.uid != nextEvent.uid:
+                        reloadit = True
+                    nextEvent = event
+                    break
+            if index == 1:
+                if nextEvent == None or event.uid != nextEvent.uid:
+                    reloadit = True
+                nextEvent = event
+                unsetNext = False
+                break
+            index=index+1
+        if unsetNext:
+            nextEvent = None
+        HBlackimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
+        HRedimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
+        drawblack = ImageDraw.Draw(HBlackimage)
+        drawred = ImageDraw.Draw(HRedimage)
+        fontTiny = ImageFont.truetype('./ProggyTiny.ttf', 16)
+        fontSmall = ImageFont.truetype('./ProggyClean.ttf', 16)
+        fontBig = ImageFont.truetype('./Roboto-Regular.ttf', 32)
+        fontHuge = ImageFont.truetype('./Roboto-Regular.ttf', 44)
+        meetingimage = Image.open('meeting.bmp')
+        if currentEvent:
+            drawred.rectangle((1, 1, epd2in13b.EPD_HEIGHT - 2, epd2in13b.EPD_WIDTH - 41), fill = 0)
+            x=20
+            y=4
+            drawred.text((x+48, y-2), 'BELEGT', font = fontBig, fill=1)
+            drawred.bitmap(bitmap=meetingimage, xy=(x,y), fill=1)
+            circimage = Image.open('circ14.bmp')
+            drawred.bitmap(bitmap=circimage, xy=(x+10,y+0), fill=1)
+            wrongwayimage = Image.open('wrongway.bmp')
+            drawblack.bitmap(bitmap=wrongwayimage, xy=(x+11,y+1))
+            timetillend = (currentEvent.end - datetime.now(timezone.utc)).seconds // 60
+            drawred.text((8, epd2in13b.EPD_WIDTH-63), 'Noch bis ' + currentEvent.end.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny, fill=1)
+            drawred.text((8, epd2in13b.EPD_WIDTH-52), currentEvent.summary[:32], font = fontTiny, fill=1)
+        else:
+            x=30
+            y=14
+            drawblack.bitmap(bitmap=meetingimage, xy=(x,y), fill=0)
+            checkimage = Image.open('check.bmp')
+            drawblack.bitmap(bitmap=checkimage, xy=(x+10,y+3), fill=0)
+            drawblack.text((x+54, y-7), 'FREI', font = fontHuge, fill=0)
+        drawblack.rectangle((0, 0, epd2in13b.EPD_HEIGHT - 1, epd2in13b.EPD_WIDTH - 40), outline = 0)
+        if nextEvent:
+            hourstillevent = (nextEvent.start - datetime.now(timezone.utc)).seconds // 3600
+            minutestillevent = (nextEvent.start - datetime.now(timezone.utc)).seconds // 60 % 60
+            drawblack.text((8, epd2in13b.EPD_WIDTH - 18), nextEvent.summary[:28], font = fontSmall)
+            if hourstillevent:
+                localTime = datetime.now() + (nextEvent.start - datetime.now(timezone.utc))
+                drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
+            else:
+                if minutestillevent <= 15:
+                    drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin in', font = fontTiny)
+                    drawred.text((8, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent) + ' Minuten', font = fontTiny)
+                    drawred.text((9, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent), font = fontTiny)
+                else:
+                    drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin in ' + str(minutestillevent) + ' Minuten', font = fontTiny)
+        else:
+            drawblack.text((8, epd2in13b.EPD_WIDTH - 26), 'Demnächst keine Belegung', font = fontSmall)
+        if reloadit:
+            epd.display(epd.getbuffer(HBlackimage),  epd.getbuffer(HRedimage))
+            epd.sleep()
 
-    HBlackimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)  # 298*126
-    HRedimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)  # 298*126
-    ImageTemplateS = Image.open('template-s.bmp')
-    ImageTemplateM = Image.open('template-m.bmp')
-    drawblack = ImageDraw.Draw(HBlackimage)
-    drawred = ImageDraw.Draw(HRedimage)
-    font11 = ImageFont.truetype('./ProggyTinySZ.ttf', 16)
-    for x in range(3):
-        HBlackimage.paste(ImageTemplateS, (12, 8 + x * 18))
-        drawblack.text((44, 10 + x * 18), 'Wolfratshausen', font = font11, fill=0)
-        drawblack.text((20, 10 + x * 18), 'S7', font = font11, fill=1)
-        drawred.text((170, 10 + x * 18), '00:02', font = font11, fill=0)
-    HBlackimage.paste(ImageTemplateM, (12, 8 + 3 * 18))
-    drawblack.text((44, 10 + 3 * 18), 'Rosenheim', font = font11, fill=0)
-    drawblack.text((23, 10 + 3 * 18), 'M', font = font11, fill=1)
-    drawred.text((170, 10 + 3 * 18), '00:13', font = font11, fill=0)
-    HBlackimage.paste(ImageTemplateS, (12, 8 + 4 * 18))
-    drawblack.text((44, 10 + 4 * 18), 'Pasing', font = font11, fill=0)
-    drawblack.text((17, 10 + 4 * 18), 'S20', font = font11, fill=1)
-    drawred.text((170, 10 + 4 * 18), '00:24', font = font11, fill=0)
-    epd.display(epd.getbuffer(HBlackimage),  epd.getbuffer(HRedimage))
+    except:
+        print('traceback.format_exc():\n%s',traceback.format_exc())
+        exit()
 
-    epd.sleep()
-
-except:
-    print('traceback.format_exc():\n%s',traceback.format_exc())
-    exit()
+while True:
+    updatedisplay()
+    time.sleep(30)

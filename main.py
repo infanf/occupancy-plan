@@ -54,6 +54,8 @@ def updatedisplay(reloadit=False):
             nextEvent = None
             reloadit = True
         if (nextEvent or currentEvent) and len(calendar) == 0:
+            nextEvent = None
+            currentEvent = None
             reloadit = True
         HBlackimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
         HRedimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)

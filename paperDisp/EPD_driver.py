@@ -22,8 +22,8 @@ class EPD_driver(object):
         self._spi.max_speed_hz = 4000000 # Spec says 250ns SPI clock cycle
         self._spi.mode = 0b00
         #Register initial variable
-        EPD2X9 = 1
-        EPD02X13 = 0
+        EPD2X9 = 0
+        EPD02X13 = 1
         EPD1X54 = 0
         if EPD2X9 == 1:
             self.xDot = 128

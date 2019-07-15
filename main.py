@@ -17,11 +17,7 @@ nextEvent = None
 calendarCache = []
 
 def eventsequal(eventA: Event, eventB: Event) -> bool:
-    if eventA.uid != eventB.uid:
-        return False
-    eventAHash = hashlib.md5(json.dumps(eventA, sort_keys=True)).hexdigest()
-    eventBHash = hashlib.md5(json.dumps(eventB, sort_keys=True)).hexdigest()
-    return eventAHash == eventBHash
+    return eventA.uid != eventB.uid or eventA.start != eventB.start or eventA.end != eventB.end
 
 def updatedisplay(reloadit=False, clearfirst=False):
     try:
@@ -43,21 +39,18 @@ def updatedisplay(reloadit=False, clearfirst=False):
         for event in calendar:
             if index == 0:
                 if event.start < datetime.now(timezone.utc):
-                    if currentEvent == None or not eventsequal(event, currentEvent):
-                        reloadit = True
+                    reloadit = currentEvent == None or not eventsequal(event, currentEvent)
                     currentEvent = event
                 else:
                     if currentEvent:
                         currentEvent = None
                         reloadit = True
                     unsetNext = False
-                    if nextEvent == None or not eventsequal(event, nextEvent):
-                        reloadit = True
+                    reloadit = nextEvent == None or not eventsequal(event, nextEvent)
                     nextEvent = event
                     break
             if index == 1:
-                if nextEvent == None or not eventsequal(event, nextEvent):
-                    reloadit = True
+                reloadit = nextEvent == None or not eventsequal(event, nextEvent)
                 nextEvent = event
                 unsetNext = False
                 break
@@ -121,5 +114,5 @@ def updatedisplay(reloadit=False, clearfirst=False):
 
 updatedisplay(True)
 while True:
-    time.sleep(60, datetime.now(timezone.utc).seconds // 60 == 0)
-    updatedisplay()
+    time.sleep(60)
+    updatedisplay(clearfirst=(datetime.now().second % 60 == 0))

@@ -1,13 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import spidev as SPI                # where the display connects
-import Image, ImageDraw, ImageFont  # PIL - PythonImageLibrary
+from PIL import Image, ImageDraw, ImageFont  # PIL - PythonImageLibrary
 import time, datetime, sys, signal, urllib, requests, random
-from StringIO import StringIO
+from io import StringIO
 
 from EPD_driver import EPD_driver
 
 def handler(signum, frame):
-    print 'SIGTERM'
+    print('SIGTERM')
     sys.exit(0)
 signal.signal(signal.SIGTERM, handler)
 random.seed(time.time())
@@ -15,9 +15,9 @@ random.seed(time.time())
 bus = 0 
 device = 0
 disp = EPD_driver(spi = SPI.SpiDev(bus, device))
-print "disp size : %dx%d"%(disp.xDot, disp.yDot)
+print("disp size : %dx%d"%(disp.xDot, disp.yDot))
 
-print '------------init and Clear full screen------------'
+print('------------init and Clear full screen------------')
 disp.Dis_Clear_full()
 disp.delay()
 
@@ -55,8 +55,8 @@ def querySearchEngine(val):
                 # print topic
                 pass
     else:
-        print req.status_code
-    print 'search for', val, ' #entries', len(imagenames) #, imagenames
+        print(req.status_code)
+    print('search for', val, ' #entries', len(imagenames)) #, imagenames
 
 # function to write the image to the display
 def imageToDisplay(img):
@@ -138,7 +138,7 @@ while 1:
                 draw.text((2, 2+y*tsy), newtext, fill=0, font=myfont10)
 
         except IOError as ex:
-            print 'IOError', str(ex), imagename[0]
+            print('IOError', str(ex), imagename[0])
             pass
 
     #draw time

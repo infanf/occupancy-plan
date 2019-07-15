@@ -98,7 +98,8 @@ def updatedisplay(reloadit=False):
                     drawred.text((8, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent) + ' Minuten', font = fontTiny)
                     drawred.text((9, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent), font = fontTiny)
                 else:
-                    drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin in ' + str(minutestillevent) + ' Minuten', font = fontTiny)
+                    # drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin in ' + str(minutestillevent) + ' Minuten', font = fontTiny)
+                    drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
         else:
             drawblack.text((8, epd2in13b.EPD_WIDTH - 26), 'Demnächst keine Belegung', font = fontSmall)
         if reloadit:

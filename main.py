@@ -21,7 +21,8 @@ def updatedisplay(reloadit=False):
         epd.init()
         unsetNext = True
         try:
-            calendar=events('https://calendar.google.com/calendar/ical/infanf.de_18850kqvp196qji0m012dma9sq0d06gb6grjidpk64p30e9g60%40resource.calendar.google.com/private-149262aac9424e3447b3e3101f8a6fc9/basic.ics')
+            icalurl=open(path+"/ICAL_URL", "r")
+            calendar=events(icalurl.readline())
             calendarCache=calendar
         except:
             calendar=calendarCache
@@ -73,7 +74,7 @@ def updatedisplay(reloadit=False):
             drawred.bitmap(bitmap=circimage, xy=(x+10,y+0), fill=1)
             wrongwayimage = Image.open(path+'/wrongway.bmp')
             drawblack.bitmap(bitmap=wrongwayimage, xy=(x+11,y+1))
-            timetillend = (currentEvent.end - datetime.now(timezone.utc)).seconds // 60
+            # timetillend = (currentEvent.end - datetime.now(timezone.utc)).seconds // 60
             drawred.text((8, epd2in13b.EPD_WIDTH-63), 'Noch bis ' + currentEvent.end.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny, fill=1)
             drawred.text((8, epd2in13b.EPD_WIDTH-52), currentEvent.summary[:32], font = fontTiny, fill=1)
         else:
@@ -89,7 +90,6 @@ def updatedisplay(reloadit=False):
             minutestillevent = (nextEvent.start - datetime.now(timezone.utc)).seconds // 60 % 60
             drawblack.text((8, epd2in13b.EPD_WIDTH - 18), nextEvent.summary[:28], font = fontSmall)
             if hourstillevent:
-                localTime = datetime.now() + (nextEvent.start - datetime.now(timezone.utc))
                 drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
             else:
                 if minutestillevent <= 15:
@@ -102,7 +102,7 @@ def updatedisplay(reloadit=False):
         else:
             drawblack.text((8, epd2in13b.EPD_WIDTH - 26), 'Demnächst keine Belegung', font = fontSmall)
         if reloadit:
-            epd.display(epd.getbuffer(HBlackimage),  epd.getbuffer(HRedimage))
+            epd.display(epd.getbuffer(HBlackimage.rotate(180)), epd.getbuffer(HRedimage.rotate(180)))
             epd.sleep()
 
     except:

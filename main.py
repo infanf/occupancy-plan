@@ -2,23 +2,35 @@
 # -*- coding:utf-8 -*-
 
 import epd2in13b
+import hashlib
+import json
+import os
 import time
+import traceback
 from PIL import Image,ImageDraw,ImageFont
 from datetime import datetime, timedelta, timezone
 from icalevents.icalevents import events
-import traceback
-import os
+from icalevents.icalparser import Event
 
 currentEvent = None
 nextEvent = None
 calendarCache = []
 
-def updatedisplay(reloadit=False):
+def eventsequal(eventA: Event, eventB: Event) -> bool:
+    if eventA.uid != eventB.uid:
+        return False
+    eventAHash = hashlib.md5(json.dumps(eventA, sort_keys=True)).hexdigest()
+    eventBHash = hashlib.md5(json.dumps(eventB, sort_keys=True)).hexdigest()
+    return eventAHash == eventBHash
+
+def updatedisplay(reloadit=False, clearfirst=False):
     try:
         global currentEvent, nextEvent, calendarCache
         path = os.path.dirname(os.path.abspath(__file__))
         epd = epd2in13b.EPD()
         epd.init()
+        if clearfirst:
+            epd.Clear()
         unsetNext = True
         try:
             icalurl=open(path+"/ICAL_URL", "r")
@@ -31,7 +43,7 @@ def updatedisplay(reloadit=False):
         for event in calendar:
             if index == 0:
                 if event.start < datetime.now(timezone.utc):
-                    if currentEvent == None or event.uid != currentEvent.uid:
+                    if currentEvent == None or not eventsequal(event, currentEvent):
                         reloadit = True
                     currentEvent = event
                 else:
@@ -39,12 +51,12 @@ def updatedisplay(reloadit=False):
                         currentEvent = None
                         reloadit = True
                     unsetNext = False
-                    if nextEvent == None or event.uid != nextEvent.uid:
+                    if nextEvent == None or not eventsequal(event, nextEvent):
                         reloadit = True
                     nextEvent = event
                     break
             if index == 1:
-                if nextEvent == None or event.uid != nextEvent.uid:
+                if nextEvent == None or not eventsequal(event, nextEvent):
                     reloadit = True
                 nextEvent = event
                 unsetNext = False
@@ -76,7 +88,6 @@ def updatedisplay(reloadit=False):
             drawred.bitmap(bitmap=circimage, xy=(x+10,y+0), fill=1)
             wrongwayimage = Image.open(path+'/wrongway.bmp')
             drawblack.bitmap(bitmap=wrongwayimage, xy=(x+11,y+1))
-            # timetillend = (currentEvent.end - datetime.now(timezone.utc)).seconds // 60
             drawred.text((8, epd2in13b.EPD_WIDTH-63), 'Noch bis ' + currentEvent.end.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny, fill=1)
             drawred.text((8, epd2in13b.EPD_WIDTH-52), currentEvent.summary[:32], font = fontTiny, fill=1)
         else:
@@ -91,17 +102,13 @@ def updatedisplay(reloadit=False):
             hourstillevent = (nextEvent.start - datetime.now(timezone.utc)).seconds // 3600
             minutestillevent = (nextEvent.start - datetime.now(timezone.utc)).seconds // 60 % 60
             drawblack.text((8, epd2in13b.EPD_WIDTH - 18), nextEvent.summary[:28], font = fontSmall)
-            if hourstillevent:
-                drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
+            if hourstillevent == 0 and minutestillevent <= 15:
+                reloadit = True
+                drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin in', font = fontTiny)
+                drawred.text((8, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent) + ' Minuten', font = fontTiny)
+                drawred.text((9, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent), font = fontTiny)
             else:
-                if minutestillevent <= 15:
-                    reloadit = True
-                    drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin in', font = fontTiny)
-                    drawred.text((8, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent) + ' Minuten', font = fontTiny)
-                    drawred.text((9, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent), font = fontTiny)
-                else:
-                    # drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin in ' + str(minutestillevent) + ' Minuten', font = fontTiny)
-                    drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
+                drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächster Termin um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
         else:
             drawblack.text((8, epd2in13b.EPD_WIDTH - 26), 'Demnächst keine Belegung', font = fontSmall)
         if reloadit:
@@ -114,5 +121,5 @@ def updatedisplay(reloadit=False):
 
 updatedisplay(True)
 while True:
-    time.sleep(60)
+    time.sleep(60, datetime.now(timezone.utc).seconds // 60 == 0)
     updatedisplay()

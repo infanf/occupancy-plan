@@ -114,5 +114,5 @@ def updatedisplay(reloadit=False, clearfirst=False):
 
 updatedisplay(True)
 while True:
-    time.sleep(60)
+    time.sleep(30)
     updatedisplay(clearfirst=(datetime.now().second % 60 == 0))

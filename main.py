@@ -17,7 +17,7 @@ nextEvent = None
 calendarCache = []
 
 def eventsequal(eventA: Event, eventB: Event) -> bool:
-    return eventA.uid != eventB.uid or eventA.start != eventB.start or eventA.end != eventB.end
+    return eventA.uid == eventB.uid and eventA.start == eventB.start and eventA.end == eventB.end
 
 def updatedisplay(reloadit=False, clearfirst=False):
     try:

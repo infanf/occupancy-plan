@@ -82,7 +82,10 @@ def updatedisplay(reloadit=False, clearfirst=False):
             wrongwayimage = Image.open(path+'/wrongway.bmp')
             drawblack.bitmap(bitmap=wrongwayimage, xy=(x+11,y+1))
             drawred.text((8, epd2in13b.EPD_WIDTH-63), 'Noch bis ' + currentEvent.end.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny, fill=1)
-            drawred.text((8, epd2in13b.EPD_WIDTH-52), currentEvent.summary[:32], font = fontTiny, fill=1)
+            if currentEvent.private:
+                drawred.text((8, epd2in13b.EPD_WIDTH-52), 'privater Termin', font = fontTiny, fill=1)
+            else:
+                drawred.text((8, epd2in13b.EPD_WIDTH-52), currentEvent.summary[:32], font = fontTiny, fill=1)
         else:
             x=30
             y=14
@@ -94,7 +97,10 @@ def updatedisplay(reloadit=False, clearfirst=False):
         if nextEvent:
             hourstillevent = (nextEvent.start - datetime.now(timezone.utc)).seconds // 3600
             minutestillevent = (nextEvent.start - datetime.now(timezone.utc)).seconds // 60 % 60
-            drawblack.text((8, epd2in13b.EPD_WIDTH - 18), nextEvent.summary[:28], font = fontSmall)
+            if nextEvent.private:
+                drawblack.text((8, epd2in13b.EPD_WIDTH - 18), 'privater Termin', font = fontSmall)
+            else:
+                drawblack.text((8, epd2in13b.EPD_WIDTH - 18), nextEvent.summary[:28], font = fontSmall)
             if hourstillevent == 0 and minutestillevent <= 15:
                 reloadit = True
                 drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächste Belegung in', font = fontTiny)

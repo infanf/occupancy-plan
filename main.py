@@ -27,6 +27,7 @@ def updatedisplay(reloadit=False, clearfirst=False):
         epd.init()
         if clearfirst:
             epd.Clear()
+            epd.sleep()
             reloadit = True
         unsetNext = True
         try:
@@ -39,11 +40,11 @@ def updatedisplay(reloadit=False, clearfirst=False):
         calendar.sort(key=lambda x: x.start)
         for event in calendar:
             if index == 0:
-                if event.start < datetime.now(timezone.utc):
+                if event.start < datetime.now(timezone.utc): # room is occupied at the moment, event is current event
                     reloadit = reloadit or currentEvent == None or not eventsequal(event, currentEvent)
                     currentEvent = event
-                else:
-                    if currentEvent:
+                else: # room is free, event is next event
+                    if currentEvent: # old event still in cache
                         currentEvent = None
                         reloadit = True
                     unsetNext = False
@@ -122,4 +123,4 @@ def updatedisplay(reloadit=False, clearfirst=False):
 updatedisplay(True)
 while True:
     time.sleep(30)
-    updatedisplay(clearfirst=(datetime.now().second % 60 == 0))
+    updatedisplay(clearfirst=(datetime.now().minute % 60 == 0))

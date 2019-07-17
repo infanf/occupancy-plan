@@ -27,6 +27,7 @@ def updatedisplay(reloadit=False, clearfirst=False):
         epd.init()
         if clearfirst:
             epd.Clear()
+            reloadit = True
         unsetNext = True
         try:
             icalurl=open(path+"/ICAL_URL", "r")
@@ -104,8 +105,8 @@ def updatedisplay(reloadit=False, clearfirst=False):
             if hourstillevent == 0 and minutestillevent <= 15:
                 reloadit = True
                 drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächste Belegung in', font = fontTiny)
-                drawred.text((8, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent) + ' Minuten', font = fontTiny)
-                drawred.text((9, epd2in13b.EPD_WIDTH - 32), '                   ' + str(minutestillevent), font = fontTiny)
+                drawred.text((8, epd2in13b.EPD_WIDTH - 32), '                    ' + str(minutestillevent) + ' Minuten', font = fontTiny)
+                drawred.text((9, epd2in13b.EPD_WIDTH - 32), '                    ' + str(minutestillevent), font = fontTiny)
             else:
                 drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächste Belegung um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
         else:

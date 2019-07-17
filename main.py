@@ -40,18 +40,18 @@ def updatedisplay(reloadit=False, clearfirst=False):
         for event in calendar:
             if index == 0:
                 if event.start < datetime.now(timezone.utc):
-                    reloadit = currentEvent == None or not eventsequal(event, currentEvent)
+                    reloadit = reloadit or currentEvent == None or not eventsequal(event, currentEvent)
                     currentEvent = event
                 else:
                     if currentEvent:
                         currentEvent = None
                         reloadit = True
                     unsetNext = False
-                    reloadit = nextEvent == None or not eventsequal(event, nextEvent)
+                    reloadit = reloadit or nextEvent == None or not eventsequal(event, nextEvent)
                     nextEvent = event
                     break
             if index == 1:
-                reloadit = nextEvent == None or not eventsequal(event, nextEvent)
+                reloadit = reloadit or nextEvent == None or not eventsequal(event, nextEvent)
                 nextEvent = event
                 unsetNext = False
                 break

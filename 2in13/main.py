@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding:utf-8 -*-
 
-import epd4in2b
+import epd2in13b
 import hashlib
 import json
 import os
@@ -23,7 +23,7 @@ def updatedisplay(reloadit=False, clearfirst=False):
     try:
         global currentEvent, nextEvent, calendarCache
         path = os.path.dirname(os.path.abspath(__file__))
-        epd = epd4in2b.EPD()
+        epd = epd2in13b.EPD()
         epd.init()
         if clearfirst:
             epd.Clear()
@@ -64,8 +64,8 @@ def updatedisplay(reloadit=False, clearfirst=False):
             nextEvent = None
             currentEvent = None
             reloadit = True
-        HBlackimage = Image.new('1', (epd4in2b.EPD_HEIGHT, epd4in2b.EPD_WIDTH), 255)
-        HRedimage = Image.new('1', (epd4in2b.EPD_HEIGHT, epd4in2b.EPD_WIDTH), 255)
+        HBlackimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
+        HRedimage = Image.new('1', (epd2in13b.EPD_HEIGHT, epd2in13b.EPD_WIDTH), 255)
         drawblack = ImageDraw.Draw(HBlackimage)
         drawred = ImageDraw.Draw(HRedimage)
         fontTiny = ImageFont.truetype(path+'/ProggyTiny.ttf', 16)
@@ -74,7 +74,7 @@ def updatedisplay(reloadit=False, clearfirst=False):
         fontHuge = ImageFont.truetype(path+'/Roboto-Regular.ttf', 44)
         meetingimage = Image.open(path+'/meeting.bmp')
         if currentEvent:
-            drawred.rectangle((1, 1, epd4in2b.EPD_HEIGHT - 2, epd4in2b.EPD_WIDTH - 41), fill = 0)
+            drawred.rectangle((1, 1, epd2in13b.EPD_HEIGHT - 2, epd2in13b.EPD_WIDTH - 41), fill = 0)
             x=20
             y=4
             drawred.text((x+48, y-2), 'BELEGT', font = fontBig, fill=1)
@@ -83,11 +83,11 @@ def updatedisplay(reloadit=False, clearfirst=False):
             drawred.bitmap(bitmap=circimage, xy=(x+10,y+0), fill=1)
             wrongwayimage = Image.open(path+'/wrongway.bmp')
             drawblack.bitmap(bitmap=wrongwayimage, xy=(x+11,y+1))
-            drawred.text((8, epd4in2b.EPD_WIDTH-63), 'Noch bis ' + currentEvent.end.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny, fill=1)
+            drawred.text((8, epd2in13b.EPD_WIDTH-63), 'Noch bis ' + currentEvent.end.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny, fill=1)
             if currentEvent.private:
-                drawred.text((8, epd4in2b.EPD_WIDTH-52), 'privater Termin', font = fontTiny, fill=1)
+                drawred.text((8, epd2in13b.EPD_WIDTH-52), 'privater Termin', font = fontTiny, fill=1)
             else:
-                drawred.text((8, epd4in2b.EPD_WIDTH-52), currentEvent.summary[:32], font = fontTiny, fill=1)
+                drawred.text((8, epd2in13b.EPD_WIDTH-52), currentEvent.summary[:32], font = fontTiny, fill=1)
         else:
             x=30
             y=14
@@ -95,23 +95,23 @@ def updatedisplay(reloadit=False, clearfirst=False):
             checkimage = Image.open(path+'/check.bmp')
             drawblack.bitmap(bitmap=checkimage, xy=(x+10,y+3), fill=0)
             drawblack.text((x+54, y-7), 'FREI', font = fontHuge, fill=0)
-        drawblack.rectangle((0, 0, epd4in2b.EPD_HEIGHT - 1, epd4in2b.EPD_WIDTH - 40), outline = 0)
+        drawblack.rectangle((0, 0, epd2in13b.EPD_HEIGHT - 1, epd2in13b.EPD_WIDTH - 40), outline = 0)
         if nextEvent:
             hourstillevent = (nextEvent.start - datetime.now(timezone.utc)).seconds // 3600
             minutestillevent = (nextEvent.start - datetime.now(timezone.utc)).seconds // 60 % 60
             if nextEvent.private:
-                drawblack.text((8, epd4in2b.EPD_WIDTH - 18), 'privater Termin', font = fontSmall)
+                drawblack.text((8, epd2in13b.EPD_WIDTH - 18), 'privater Termin', font = fontSmall)
             else:
-                drawblack.text((8, epd4in2b.EPD_WIDTH - 18), nextEvent.summary[:28], font = fontSmall)
+                drawblack.text((8, epd2in13b.EPD_WIDTH - 18), nextEvent.summary[:28], font = fontSmall)
             if hourstillevent == 0 and minutestillevent <= 15:
                 reloadit = True
-                drawblack.text((8, epd4in2b.EPD_WIDTH - 32), 'Nächste Belegung in', font = fontTiny)
-                drawred.text((8, epd4in2b.EPD_WIDTH - 32), '                    ' + str(minutestillevent) + ' Minuten', font = fontTiny)
-                drawred.text((9, epd4in2b.EPD_WIDTH - 32), '                    ' + str(minutestillevent), font = fontTiny)
+                drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächste Belegung in', font = fontTiny)
+                drawred.text((8, epd2in13b.EPD_WIDTH - 32), '                    ' + str(minutestillevent) + ' Minuten', font = fontTiny)
+                drawred.text((9, epd2in13b.EPD_WIDTH - 32), '                    ' + str(minutestillevent), font = fontTiny)
             else:
-                drawblack.text((8, epd4in2b.EPD_WIDTH - 32), 'Nächste Belegung um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
+                drawblack.text((8, epd2in13b.EPD_WIDTH - 32), 'Nächste Belegung um ' + nextEvent.start.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime("%H:%M"), font = fontTiny)
         else:
-            drawblack.text((8, epd4in2b.EPD_WIDTH - 26), 'Demnächst keine Belegung', font = fontSmall)
+            drawblack.text((8, epd2in13b.EPD_WIDTH - 26), 'Demnächst keine Belegung', font = fontSmall)
         if reloadit:
             epd.display(epd.getbuffer(HBlackimage.rotate(180)), epd.getbuffer(HRedimage.rotate(180)))
             epd.sleep()
